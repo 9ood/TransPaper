@@ -1,0 +1,6 @@
+{
+  "api_key": "你的千问API密钥",
+  "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "model": "qwen-mt-turbo",
+  "port": 7862
+}
