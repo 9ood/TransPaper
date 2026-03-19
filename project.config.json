@@ -1,0 +1,28 @@
+{
+  "id": "trans-paper",
+  "name": "论文翻译服务",
+  "category": "工具类",
+  "type": "tool",
+  "status": "draft",
+  "summary": "把 pdf2zh-next 包成可启动服务，提供论文翻译能力。",
+  "description": "这是一个工具服务项目。当前先接入真实项目总表，后面再补统一的启动、停止和健康检查。",
+  "path": "E:/Project/codex/TransPaper",
+  "entry": "",
+  "health": "",
+  "integration": "project-config",
+  "control": {
+    "enabled": false,
+    "type": "tool",
+    "actions": []
+  },
+  "paths": {
+    "config": "config"
+  },
+  "timeline": [
+    {
+      "time": "今天",
+      "title": "纳入真实项目表",
+      "note": "已经接入总台展示，后面会补最小控制层。"
+    }
+  ]
+}

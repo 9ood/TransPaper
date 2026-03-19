@@ -7,3 +7,4 @@ venv/
 .env
 *.pdf
 pdf2zh_files/
+.DS_Store
