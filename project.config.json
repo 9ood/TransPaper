@@ -5,7 +5,7 @@
   "type": "service",
   "status": "draft",
   "summary": "把 pdf2zh-next 包成可启动的论文翻译服务。",
-  "description": "这是一个工具服务项目。现在已经接入 dashboard，可以做配置检查、启动和停止。第一次使用前，要先运行 setup.bat 填好 API Key。",
+  "description": "这是一个工具服务项目。现在已经接入 dashboard，可以做配置检查、启动和停止。默认推荐 Google 翻译引擎，开箱就能用；如果你想用 QwenMT，再去 setup.bat 里填 API Key。",
   "path": "E:/Project/codex/TransPaper",
   "entry": "http://127.0.0.1:7862/",
   "health": "http://127.0.0.1:7862/",
@@ -28,7 +28,7 @@
     },
     "processMatch": {
       "name": "python.exe",
-      "commandLinePattern": "*TransPaper*start_server.py*"
+      "commandLinePattern": "*pdf2zh_next.main*--server-port 7862*"
     },
     "startupProbe": {
       "initialDelayMs": 5000,

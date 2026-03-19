@@ -2,7 +2,8 @@ $ErrorActionPreference = "Stop"
 
 $Targets = Get-CimInstance Win32_Process | Where-Object {
     $_.Name -eq "python.exe" -and
-    $_.CommandLine -like "*TransPaper*start_server.py*"
+    $_.CommandLine -like "*pdf2zh_next.main*" -and
+    $_.CommandLine -like "*--server-port 7862*"
 }
 
 if (-not $Targets) {

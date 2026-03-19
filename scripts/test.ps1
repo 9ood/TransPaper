@@ -10,9 +10,12 @@ if (-not (Test-Path $ConfigFile)) {
 }
 
 $Config = Get-Content $ConfigFile -Raw | ConvertFrom-Json
+$Engine = if ($Config.engine) { $Config.engine.ToString().ToLower() } else { "google" }
 
-if (-not $Config.api_key -or $Config.api_key -like "*API*" -or $Config.api_key -like "*api*") {
-    Write-Error "API Key is missing. Please run setup.bat first."
+if ($Engine -eq "qwenmt") {
+    if (-not $Config.api_key -or $Config.api_key -like "*API*" -or $Config.api_key -like "*api*") {
+        Write-Error "API Key is missing for QwenMT. Please run setup.bat first."
+    }
 }
 
 if (-not $Config.port) {
@@ -25,3 +28,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Output "Config check passed"
+Write-Output "Engine: $Engine"

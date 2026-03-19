@@ -1,86 +1,130 @@
 #!/usr/bin/env python3
-import os
-import sys
-import subprocess
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
+
+ROOT = Path(__file__).parent
+CONFIG_FILE = ROOT / "config" / "config.json"
+DEFAULT_PORT = 7862
+DEFAULT_ENGINE = "google"
+
+
 def load_config():
-    config_file = Path(__file__).parent / "config" / "config.json"
-    
-    if not config_file.exists():
-        print("错误：找不到配置文件 config/config.json")
-        print("请先运行 setup.bat 进行配置")
+    if not CONFIG_FILE.exists():
+        print("Config file is missing: config/config.json")
+        print("Please run setup.bat first.")
         sys.exit(1)
-    
-    with open(config_file, 'r', encoding='utf-8') as f:
-        return json.load(f)
+
+    with CONFIG_FILE.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
 
 def check_python_version():
     version = sys.version_info
     if version.major < 3 or (version.major == 3 and version.minor < 8):
-        print(f"错误：需要 Python 3.8 或更高版本，当前版本是 {version.major}.{version.minor}")
+        print(f"Python 3.8+ is required. Current version: {version.major}.{version.minor}")
         sys.exit(1)
-    print(f"Python 版本检查通过: {version.major}.{version.minor}.{version.micro}")
+    print(f"Python check passed: {version.major}.{version.minor}.{version.micro}")
+
 
 def install_dependencies():
-    print("正在检查并安装依赖...")
+    print("Checking dependencies...")
     try:
         subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "pip"], check=True)
         subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "uv"], check=True)
         subprocess.run([sys.executable, "-m", "uv", "pip", "install", "-q", "pdf2zh-next"], check=True)
-        print("依赖安装完成")
-    except subprocess.CalledProcessError as e:
-        print(f"安装依赖时出错: {e}")
+        print("Dependencies ready")
+    except subprocess.CalledProcessError as error:
+        print(f"Dependency install failed: {error}")
         sys.exit(1)
 
-def start_server(config):
-    api_key = config.get("api_key", "")
-    base_url = config.get("base_url", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-    model = config.get("model", "qwen-mt-turbo")
-    port = config.get("port", 7862)
-    
-    if not api_key:
-        print("错误：API Key 未配置")
-        print("请编辑 config/config.json 文件，填入你的 API Key")
+
+def get_engine(config):
+    engine = str(config.get("engine", DEFAULT_ENGINE)).strip().lower()
+    if engine not in {"google", "bing", "qwenmt"}:
+        print(f"Unsupported engine: {engine}")
         sys.exit(1)
-    
+    return engine
+
+
+def build_command(config):
+    engine = get_engine(config)
+    port = int(config.get("port", DEFAULT_PORT))
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "pdf2zh_next.main",
+        "--gui",
+        "--server-port",
+        str(port),
+    ]
+
+    if engine == "google":
+        cmd.append("--google")
+        return engine, cmd
+
+    if engine == "bing":
+        cmd.append("--bing")
+        return engine, cmd
+
+    api_key = str(config.get("api_key", "")).strip()
+    base_url = str(
+        config.get("base_url", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+    ).strip()
+    model = str(config.get("model", "qwen-mt-turbo")).strip()
+
+    if not api_key:
+        print("QwenMT engine needs api_key in config/config.json")
+        sys.exit(1)
+
     os.environ["QWENMT_API_KEY"] = api_key
     os.environ["QWENMT_BASE_URL"] = base_url
     os.environ["QWENMT_MODEL"] = model
-    os.environ["GRADIO_SERVER_PORT"] = str(port)
-    
-    print(f"\n正在启动 PDF 翻译服务...")
-    print(f"服务地址: http://localhost:{port}")
-    print(f"使用模型: {model}")
-    print(f"\n按 Ctrl+C 可以停止服务\n")
-    
-    cmd = [
-        sys.executable, "-m", "pdf2zh_next", "--gui",
-        "--server-port", str(port),
-        "--qwenmt",
-        "--qwenmt-base-url", base_url,
-        "--qwenmt-api-key", api_key,
-        "--qwenmt-model", model
-    ]
-    
+    cmd.extend(
+        [
+            "--qwenmt",
+            "--qwenmt-base-url",
+            base_url,
+            "--qwenmt-api-key",
+            api_key,
+            "--qwenmt-model",
+            model,
+        ]
+    )
+    return engine, cmd
+
+
+def start_server(config):
+    engine, cmd = build_command(config)
+    port = int(config.get("port", DEFAULT_PORT))
+
+    print("\nStarting PDF translation service...")
+    print(f"URL: http://127.0.0.1:{port}")
+    print(f"Engine: {engine}")
+    print("\nPress Ctrl+C to stop.\n")
+
     try:
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=False)
     except KeyboardInterrupt:
-        print("\n\n服务已停止")
-    except Exception as e:
-        print(f"\n启动服务时出错: {e}")
+        print("\nService stopped.")
+    except Exception as error:
+        print(f"\nFailed to start service: {error}")
         sys.exit(1)
+
 
 def main():
     print("=" * 50)
-    print("PDF 翻译服务启动程序")
+    print("TransPaper service launcher")
     print("=" * 50)
-    
     check_python_version()
     config = load_config()
     install_dependencies()
     start_server(config)
+
 
 if __name__ == "__main__":
     main()
