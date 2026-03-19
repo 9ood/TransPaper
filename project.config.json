@@ -2,27 +2,49 @@
   "id": "trans-paper",
   "name": "论文翻译服务",
   "category": "工具类",
-  "type": "tool",
+  "type": "service",
   "status": "draft",
-  "summary": "把 pdf2zh-next 包成可启动服务，提供论文翻译能力。",
-  "description": "这是一个工具服务项目。当前先接入真实项目总表，后面再补统一的启动、停止和健康检查。",
+  "summary": "把 pdf2zh-next 包成可启动的论文翻译服务。",
+  "description": "这是一个工具服务项目。现在已经接入 dashboard，可以做配置检查、启动和停止。第一次使用前，要先运行 setup.bat 填好 API Key。",
   "path": "E:/Project/codex/TransPaper",
-  "entry": "",
-  "health": "",
+  "entry": "http://127.0.0.1:7862/",
+  "health": "http://127.0.0.1:7862/",
   "integration": "project-config",
   "control": {
-    "enabled": false,
-    "type": "tool",
-    "actions": []
+    "enabled": true,
+    "type": "service",
+    "actions": ["test", "run", "stop"],
+    "testCommand": {
+      "command": "powershell",
+      "args": ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", "scripts/test.ps1"]
+    },
+    "runCommand": {
+      "command": "powershell",
+      "args": ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", "scripts/run.ps1"]
+    },
+    "stopCommand": {
+      "command": "powershell",
+      "args": ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", "scripts/stop.ps1"]
+    },
+    "processMatch": {
+      "name": "python.exe",
+      "commandLinePattern": "*TransPaper*start_server.py*"
+    },
+    "startupProbe": {
+      "initialDelayMs": 5000,
+      "attempts": 40,
+      "intervalMs": 3000
+    }
   },
   "paths": {
-    "config": "config"
+    "config": "config",
+    "logs": "logs"
   },
   "timeline": [
     {
       "time": "今天",
-      "title": "纳入真实项目表",
-      "note": "已经接入总台展示，后面会补最小控制层。"
+      "title": "接入真实控制层",
+      "note": "dashboard 现在可以检查配置、启动和停止这个项目。"
     }
   ]
 }
