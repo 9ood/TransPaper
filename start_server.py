@@ -10,6 +10,7 @@ ROOT = Path(__file__).parent
 CONFIG_FILE = ROOT / "config" / "config.json"
 DEFAULT_PORT = 7862
 DEFAULT_ENGINE = "google"
+DEFAULT_HOST = os.getenv("TRANSPAPER_HOST", "0.0.0.0")
 
 
 def load_config():
@@ -53,6 +54,7 @@ def get_engine(config):
 def build_command(config):
     engine = get_engine(config)
     port = int(config.get("port", DEFAULT_PORT))
+    host = str(config.get("host", DEFAULT_HOST)).strip() or DEFAULT_HOST
 
     cmd = [
         sys.executable,
@@ -65,11 +67,11 @@ def build_command(config):
 
     if engine == "google":
         cmd.append("--google")
-        return engine, cmd
+        return engine, host, cmd
 
     if engine == "bing":
         cmd.append("--bing")
-        return engine, cmd
+        return engine, host, cmd
 
     api_key = str(config.get("api_key", "")).strip()
     base_url = str(
@@ -95,20 +97,32 @@ def build_command(config):
             model,
         ]
     )
-    return engine, cmd
+    return engine, host, cmd
 
 
 def start_server(config):
-    engine, cmd = build_command(config)
+    engine, host, cmd = build_command(config)
     port = int(config.get("port", DEFAULT_PORT))
+    env = os.environ.copy()
+    repo_pythonpath = str(ROOT)
+    existing_pythonpath = env.get("PYTHONPATH", "").strip()
+
+    if existing_pythonpath:
+        env["PYTHONPATH"] = f"{repo_pythonpath}{os.pathsep}{existing_pythonpath}"
+    else:
+        env["PYTHONPATH"] = repo_pythonpath
+
+    # Let sitecustomize.py know this is the branded launcher for TransPaper.
+    env["TRANSPAPER_BRANDING"] = "1"
+    env["GRADIO_SERVER_NAME"] = host
 
     print("\nStarting PDF translation service...")
-    print(f"URL: http://127.0.0.1:{port}")
+    print(f"URL: http://{host}:{port}")
     print(f"Engine: {engine}")
     print("\nPress Ctrl+C to stop.\n")
 
     try:
-        subprocess.run(cmd, check=False)
+        subprocess.run(cmd, check=False, env=env)
     except KeyboardInterrupt:
         print("\nService stopped.")
     except Exception as error:

@@ -37,7 +37,7 @@ if "%PORT%"=="" set PORT=7862
 
 set API_KEY=
 set BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-set MODEL=qwen-mt-turbo
+set MODEL=qwen-mt-plus
 
 if /I "%ENGINE%"=="qwenmt" (
     set /p API_KEY="QwenMT API key: "
